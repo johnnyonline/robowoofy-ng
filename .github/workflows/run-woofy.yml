@@ -1,4 +1,4 @@
-name: 🐶 Run Robowoofy Script
+name: 🐶 Run Robowoofy
 
 on:
   issue_comment:
@@ -15,18 +15,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Acknowledge user comment with an emoji
+      - name: 🐾 React to comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          comment-id: ${{ github.event.comment.id }}
+          reactions: "eyes"
+
+      # 2️⃣ Parse /run command parameters
       - name: 🧾 Parse command
         id: parse
         run: |
           comment="${{ github.event.comment.body }}"
           echo "Comment: $comment"
 
-          # Default values
           FN="main"
           NETWORK="mainnet"
           SEND="false"
 
-          # Parse arguments like fn=func_name network=arb send=true
           for arg in $comment; do
             case "$arg" in
               fn=*) FN="${arg#fn=}" ;;
@@ -39,41 +46,41 @@ jobs:
           echo "network=$NETWORK" >> $GITHUB_OUTPUT
           echo "send=$SEND" >> $GITHUB_OUTPUT
 
+      # 3️⃣ Checkout repo
       - name: 🧰 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      # 4️⃣ Build Docker image
+      - name: 🐳 Build Docker image
+        run: docker build -t robowoofy-ng .
 
-      - name: ⚡ Install dependencies
+      # 5️⃣ Create .env file for secrets
+      - name: 🔐 Create .env file
         run: |
-          pip install uv
-          uv sync
-          pip install eth-brownie==1.21.0 git+https://github.com/wavey0x/brownie-safe.git@deps setuptools==80.9.0
-          curl -L https://foundry.paradigm.xyz | bash
-          /root/.foundry/bin/foundryup
-          ln -s /root/.foundry/bin/* /usr/local/bin/
+          echo "ROBOWOOFY_SIGNER_PK=${{ secrets.ROBOWOOFY_SIGNER_PK }}" > .env
+          echo "ETHERSCAN_TOKEN=${{ secrets.ETHERSCAN_TOKEN }}" >> .env
+          echo "TG_BOT_ACCESS_TOKEN=${{ secrets.TG_BOT_ACCESS_TOKEN }}" >> .env
+          echo "TG_GROUP_CHAT_ID=${{ secrets.TG_GROUP_CHAT_ID }}" >> .env
+          echo "ETH_RPC_URL=${{ secrets.ETH_RPC_URL }}" >> .env
 
-      - name: 🔐 Set environment variables
-        env:
-          ROBOWOOFY_SIGNER_PK: ${{ secrets.ROBOWOOFY_SIGNER_PK }}
-          SAFE_ADDRESS: ${{ secrets.SAFE_ADDRESS }}
-          TG_ERROR_GROUP_CHAT_ID: ${{ secrets.TG_ERROR_GROUP_CHAT_ID }}
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          ETH_RPC_URL: ${{ secrets.ETH_RPC_URL }}
-          BASE_RPC_URL: ${{ secrets.BASE_RPC_URL }}
-          ARB_RPC_URL: ${{ secrets.ARB_RPC_URL }}
-        run: |
-          echo "Environment ready."
-
+      # 6️⃣ Run Robowoofy inside Docker
       - name: 🧪 Run Robowoofy
         run: |
           echo "Running function: ${{ steps.parse.outputs.fn }}"
           echo "Network: ${{ steps.parse.outputs.network }}"
           echo "Send flag: ${{ steps.parse.outputs.send }}"
 
-          brownie run src/woof.py ${{ steps.parse.outputs.fn }} \
-            --network ${{ steps.parse.outputs.network }} \
-            $([ "${{ steps.parse.outputs.send }}" = "true" ] && echo "--send" || echo "")
+          docker run --rm \
+            --env-file .env \
+            -v ${{ github.workspace }}:/robowoofy-ng \
+            robowoofy-ng \
+            bash -c "
+              brownie networks import ./network-config.yaml && \
+              brownie run src/woof.py ${{ steps.parse.outputs.fn }} \
+                --network ${{ steps.parse.outputs.network }}
+            "
+
+      # 7️⃣ Cleanup sensitive file
+      - name: 🧹 Cleanup .env
+        if: always()
+        run: rm -f .env
