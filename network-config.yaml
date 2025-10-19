@@ -1,0 +1,21 @@
+live:
+- name: Ethereum
+  networks:
+    - name: Mainnet
+      chainid: 1
+      id: mainnet-woofy
+      host: $ETH_RPC_URL
+      explorer: https://api.etherscan.io/api
+  
+development:
+- cmd: anvil --steps-tracing --block-base-fee-per-gas 0 --gas-price 0
+  cmd_settings:
+    fork: mainnet-woofy
+    port: 8545
+  host: http://127.0.0.1
+  id: mainnet-fork-woofy
+  name: Mainnet Fork
+  timeout: 1200
+
+# brownie networks delete mainnet
+# brownie networks import ./network-config.yaml
