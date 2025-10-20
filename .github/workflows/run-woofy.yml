@@ -15,16 +15,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Acknowledge user comment with an emoji
-      - name: 🐾 React to comment
+      - name: React to comment with eyes
         uses: peter-evans/create-or-update-comment@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           comment-id: ${{ github.event.comment.id }}
-          reactions: "eyes"
+          reactions: eyes
+      
+      - name: React to comment with rocket
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ github.event.comment.id }}
+          reactions: rocket
 
-      # 2️⃣ Parse /run command parameters
-      - name: 🧾 Parse command
+      - name: Parse command
         id: parse
         run: |
           comment="${{ github.event.comment.body }}"
@@ -46,29 +49,33 @@ jobs:
           echo "network=$NETWORK" >> $GITHUB_OUTPUT
           echo "send=$SEND" >> $GITHUB_OUTPUT
 
-      # 3️⃣ Checkout repo
-      - name: 🧰 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 4️⃣ Build Docker image
-      - name: 🐳 Build Docker image
+      - name: Build Docker image
         run: docker build -t robowoofy-ng .
 
-      # 5️⃣ Create .env file for secrets
-      - name: 🔐 Create .env file
+      - name: Create .env file
         run: |
           echo "ROBOWOOFY_SIGNER_PK=${{ secrets.ROBOWOOFY_SIGNER_PK }}" > .env
           echo "ETHERSCAN_TOKEN=${{ secrets.ETHERSCAN_TOKEN }}" >> .env
           echo "TG_BOT_ACCESS_TOKEN=${{ secrets.TG_BOT_ACCESS_TOKEN }}" >> .env
           echo "TG_GROUP_CHAT_ID=${{ secrets.TG_GROUP_CHAT_ID }}" >> .env
           echo "ETH_RPC_URL=${{ secrets.ETH_RPC_URL }}" >> .env
+          echo "GITHUB_REPOSITORY=${{ github.repository }}" >> .env
+          echo "GITHUB_RUN_ID=${{ github.run_id }}" >> .env
+          echo "GITHUB_PR_NUMBER=${{ github.event.issue.number }}" >> .env
+          echo "GITHUB_PR_AUTHOR=${{ github.event.comment.user.login }}" >> .env
+          echo "GITHUB_PR_TITLE=${{ github.event.issue.title }}" >> .env
+          echo "GITHUB_PR_BODY=${{ github.event.issue.body }}" >> .env
+          echo "NETWORK=${{ steps.parse.outputs.network }}" >> .env
 
-      # 6️⃣ Run Robowoofy inside Docker
-      - name: 🧪 Run Robowoofy
+      - name: Run Robowoofy
         run: |
-          echo "Running function: ${{ steps.parse.outputs.fn }}"
+          echo "Running Robowoofy with parameters:"
+          echo "Function: ${{ steps.parse.outputs.fn }}"
           echo "Network: ${{ steps.parse.outputs.network }}"
-          echo "Send flag: ${{ steps.parse.outputs.send }}"
+          echo "Send: ${{ steps.parse.outputs.send }}"
 
           docker run --rm \
             --env-file .env \
@@ -76,11 +83,49 @@ jobs:
             robowoofy-ng \
             bash -c "
               brownie networks import ./network-config.yaml && \
-              brownie run src/woof.py ${{ steps.parse.outputs.fn }} \
-                --network ${{ steps.parse.outputs.network }}
-            "
+              SEND=${{ steps.parse.outputs.send }} brownie run src/woof.py ${{ steps.parse.outputs.fn }} \
+                --network ${{ steps.parse.outputs.network }}-fork
+            " | tee run_output.log
+      
+      - name: React to comment with hooray
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ github.event.comment.id }}
+          reactions: hooray
 
-      # 7️⃣ Cleanup sensitive file
-      - name: 🧹 Cleanup .env
+      - name: Update comment with logs
+        if: always()
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ github.event.comment.id }}
+          body: |
+            ✅ **Robowoofy Run Completed**
+            **Function:** `${{ steps.parse.outputs.fn }}`
+            **Network:** `${{ steps.parse.outputs.network }}`
+            **Send:** `${{ steps.parse.outputs.send }}`
+
+            <details>
+            <summary>View Logs</summary>
+
+            ```
+            ${{ steps.run-woofy.outcome == 'success' && 'Status: SUCCESS ✅' || 'Status: FAILED ❌' }}
+            ```
+            <pre>
+            ${{ toJSON(steps.run-woofy.outputs) }}
+            </pre>
+            </details>
+      
+      - name: Add network label
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: "${{ steps.parse.outputs.network }} #${{ github.run_number }}"
+      
+      - name: Close PR
+        if: ${{ success() }}
+        uses: peter-evans/close-issue@v3
+        with:
+          issue-number: ${{ github.event.issue.number }}
+
+      - name: Cleanup .env
         if: always()
         run: rm -f .env

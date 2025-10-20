@@ -17,4 +17,5 @@ def load_contract(address: str) -> Contract:
     try:
         return SAFE.contract(address)
     except ValueError:
-        return Contract.from_explorer(address)
+        Contract.from_explorer(address)
+        return SAFE.contract(address)

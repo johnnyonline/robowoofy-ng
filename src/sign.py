@@ -1,15 +1,15 @@
+import asyncio
 import os
 from functools import wraps
 from typing import Callable, Optional
-import asyncio
 
 from brownie import accounts
 
-from .config import SAFE
+from .config import SAFE, get_safe_tx_queue_url
 from .tg import notify_group_chat
 
 
-def sign(send: bool = False, nonce: Optional[int] = None):
+def sign(nonce: Optional[int] = None):
     """
     Decorator that automatically handles Safe setup, signing, (optionally) posting, and sending a telegram notification.
 
@@ -33,9 +33,11 @@ def sign(send: bool = False, nonce: Optional[int] = None):
             print("\n🔍 Transaction preview:\n")
             SAFE.preview(safe_tx, call_trace=True)
 
+            # Determine send flag from env var if not explicitly set
+            send = os.getenv("SEND", "false").lower() == "true"
+
             if not send:
                 print("\n🌵 Dry-run!\n")
-                asyncio.run(notify_group_chat("🟢 🐶 <b>woof!</b>"))
                 return safe_tx
 
             # Reset Brownie account cache
@@ -51,8 +53,33 @@ def sign(send: bool = False, nonce: Optional[int] = None):
 
             print("\n✅ Transaction queued!\n")
 
+            network = os.getenv("NETWORK", "eth")
+            repo = os.getenv("GITHUB_REPOSITORY")
+            sender = os.getenv("GITHUB_PR_AUTHOR")
+            run_id = os.getenv("GITHUB_RUN_ID")
+            pr_number = os.getenv("GITHUB_PR_NUMBER")
+            pr_title = os.getenv("GITHUB_PR_TITLE")
+            pr_body = os.getenv("GITHUB_PR_BODY")
+
+            if pr_body is None:
+                pr_body = "No description provided 🤡"
+
+            safe_link = f"{get_safe_tx_queue_url(network)}{SAFE.address}"
+            code_link = f"https://github.com/{repo}/pull/{pr_number}/files"
+            logs_link = f"https://github.com/{repo}/actions/runs/{run_id}"
+
+            msg = (
+                f"🐶🐶🐶\n"
+                f"<b>Title:</b> {pr_title}\n"
+                f"<b>Sender:</b> @{sender}\n"
+                f"<b>Description:</b> {pr_body}\n\n"
+                f'<a href="{code_link}">Review the code</a>, '
+                f'<a href="{logs_link}">verify the output</a>, and '
+                f'<a href="{safe_link}">sign here</a>.'
+            )
+
             # Fire off async tg notif
-            asyncio.run(notify_group_chat("🐶 <b>woof!</b>"))
+            asyncio.run(notify_group_chat(msg))
 
             return safe_tx
 

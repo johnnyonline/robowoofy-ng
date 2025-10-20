@@ -35,7 +35,7 @@
 
 Run:
 ```shell
-brownie run src/woof.py woofy --network mainnet-fork-woofy
+brownie run src/woof.py woofy --network eth
 ```
 
 ## Code Style

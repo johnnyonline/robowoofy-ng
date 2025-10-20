@@ -3,19 +3,33 @@ live:
   networks:
     - name: Mainnet
       chainid: 1
-      id: mainnet-woofy
+      id: eth
       host: $ETH_RPC_URL
       explorer: https://api.etherscan.io/api
+- name: Base
+  networks:
+    - name: Mainnet
+      chainid: 8453
+      host: $BASE_RPC_URL
+      id: base
+      explorer: https://api.basescan.org/api
   
 development:
 - cmd: anvil --steps-tracing --block-base-fee-per-gas 0 --gas-price 0
   cmd_settings:
-    fork: mainnet-woofy
+    fork: eth
     port: 8545
   host: http://127.0.0.1
-  id: mainnet-fork-woofy
+  id: eth-fork
   name: Mainnet Fork
   timeout: 1200
+- cmd: anvil --steps-tracing --block-base-fee-per-gas 0 --gas-price 0
+  cmd_settings:
+    fork: base
+    port: 8545
+  host: http://127.0.0.1
+  id: base-fork
+  name: Base Fork
+  timeout: 1200
 
-# brownie networks delete mainnet
 # brownie networks import ./network-config.yaml
