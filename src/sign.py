@@ -28,7 +28,7 @@ def sign(nonce: Optional[int] = None):
 
             # Determine nonce
             safe_nonce = nonce or SAFE.pending_nonce()
-            print(f"ROBOWOOFY_NONCE={safe_nonce}")  # <-- machine-readable for CI
+            print(f"ROBOWOOFY_NONCE={safe_nonce}\n")  # <-- machine-readable for CI
 
             # Combine into multisend
             safe_tx = SAFE.multisend_from_receipts(safe_nonce=safe_nonce)
