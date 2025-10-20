@@ -6,6 +6,7 @@ from .utils import load_contract
 # @todo
 # (1) cleanup README etc
 # (2) remove ruff and mypy
+# (3) put yearn stuff in things (yfi, config.py, etc)
 @sign()
 def woofy():
     dai = load_contract("0xD533a949740bb3306d119CC777fa900bA034cd52")

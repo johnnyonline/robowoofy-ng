@@ -33,8 +33,8 @@ jobs:
           comment="${{ github.event.comment.body }}"
           echo "Comment: $comment"
 
-          FN="main"
-          NETWORK="mainnet"
+          FN="woofy"
+          NETWORK="eth"
           SEND="false"
 
           for arg in $comment; do
@@ -86,6 +86,19 @@ jobs:
               SEND=${{ steps.parse.outputs.send }} brownie run src/woof.py ${{ steps.parse.outputs.fn }} \
                 --network ${{ steps.parse.outputs.network }}-fork
             " | tee run_output.log
+
+      - name: Extract nonce + prepare log snippet
+        id: post
+        if: always()
+        run: |
+          # Extract first ROBOWOOFY_NONCE=NNN occurrence
+          NONCE="$(grep -Eo 'ROBOWOOFY_NONCE=[0-9]+' run_output.log | head -n1 | cut -d= -f2 || true)"
+          echo "nonce=${NONCE:-unknown}" >> $GITHUB_OUTPUT
+
+          # Prepare a readable tail of logs (last 200 lines)
+          echo 'log<<EOF' >> $GITHUB_OUTPUT
+          tail -n 200 run_output.log >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
       
       - name: React to comment with hooray
         uses: peter-evans/create-or-update-comment@v4
@@ -99,32 +112,31 @@ jobs:
         with:
           comment-id: ${{ github.event.comment.id }}
           body: |
-            ✅ **Robowoofy Run Completed**
-            **Function:** `${{ steps.parse.outputs.fn }}`
-            **Network:** `${{ steps.parse.outputs.network }}`
-            **Send:** `${{ steps.parse.outputs.send }}`
+            **Robowoofy Run**
+            • **Function:** `${{ steps.parse.outputs.fn }}`
+            • **Network:** `${{ steps.parse.outputs.network }}`
+            • **Send:** `${{ steps.parse.outputs.send }}`
+            • **Status:** `${{ steps.run_woofy.outcome }}`
 
             <details>
-            <summary>View Logs</summary>
+            <summary>View Logs (last 200 lines)</summary>
 
             ```
-            ${{ steps.run-woofy.outcome == 'success' && 'Status: SUCCESS ✅' || 'Status: FAILED ❌' }}
+            ${{ steps.post.outputs.log }}
             ```
-            <pre>
-            ${{ toJSON(steps.run-woofy.outputs) }}
-            </pre>
             </details>
       
       - name: Add network label
         uses: actions-ecosystem/action-add-labels@v1
         with:
-          labels: "${{ steps.parse.outputs.network }} #${{ github.run_number }}"
+          labels: "${{ steps.parse.outputs.network }} #${{ steps.post.outputs.nonce }}"
       
-      - name: Close PR
-        if: ${{ success() }}
+      - name: Close PR if success & send=true
+        if: ${{ steps.run_woofy.outcome == 'success' && steps.parse.outputs.send == 'true' }}
         uses: peter-evans/close-issue@v3
         with:
           issue-number: ${{ github.event.issue.number }}
+          comment: "✅ Successful run on `${{ steps.parse.outputs.network }}` with send=true. Closing PR."
 
       - name: Cleanup .env
         if: always()

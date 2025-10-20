@@ -26,8 +26,11 @@ def sign(nonce: Optional[int] = None):
             # Rrecord tx receipts
             fn(*args, **kwargs)
 
-            # Combine into multisend
+            # Determine nonce
             safe_nonce = nonce or SAFE.pending_nonce()
+            print(f"ROBOWOOFY_NONCE={safe_nonce}")  # <-- machine-readable for CI
+
+            # Combine into multisend
             safe_tx = SAFE.multisend_from_receipts(safe_nonce=safe_nonce)
 
             print("\n🔍 Transaction preview:\n")
