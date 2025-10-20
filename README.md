@@ -1,16 +1,16 @@
-# 🐶 robowoofy-ng
+# robowoofy-ng
 
 **Robowoofy** is a GitHub-Actions-driven automation tool that lets you safely execute, simulate, and propose multi-step on-chain transactions through a Gnosis Safe.
 It’s designed so users can open PRs that define **one function** (e.g. `woofy()`) describing the on-chain actions they want the Safe to perform.
 A GitHub Action then picks up `/run` comments, runs the code in a Dockerized Brownie environment, and either does a **dry run** or **submits a transaction** to the Safe
 
-## 🧠 How it Works
+## How it Works
 
 - Every PR defines a function (e.g. `woofy()`) inside the `woof.py`, decorated with `@sign()`
 - The decorator constructs a Safe transaction and (optionally) signs and sends it
 - The GitHub Action listens for comments like `/run fn=woofy network=eth send=true`
 
-## 🧩 Writing your function
+## Writing your function
 
 A function could look like:
 ```python
@@ -33,7 +33,7 @@ def woofy():
     print("Staked yCRV into YBS")
 ```
 
-## 💼 Setting up the Repository
+## Setting up the Repository
 
 If you want to use Robowoofy as to queue txns to your own Safe:
 
@@ -69,7 +69,7 @@ If you want to use Robowoofy as to queue txns to your own Safe:
      - Post results and logs as a comment  
      - If `send=true` and run succeeds, it will queue the txn and label and close the PR automatically
 
-### ⚙️ Default values
+### Default values
 
 If any parameters are missing from the `/run` comment, the following defaults are applied:
 
@@ -81,7 +81,7 @@ If any parameters are missing from the `/run` comment, the following defaults ar
 
 Commenting just `/run` is equivalent to `/run fn=woofy network=eth send=false`
 
-## 🐳 Docker Usage
+## Docker Usage
 
 You can reproduce the same environment locally as CI:
 
@@ -98,7 +98,7 @@ Inside the container, run:
 brownie run src/woof.py woofy --network eth-fork
 ```
 
-## ✨ Code Style
+## Code Style
 
 Format and lint code with ruff:
 ```bash
