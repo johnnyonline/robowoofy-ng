@@ -1,4 +1,4 @@
-# robowoofy-ng
+# Robowoofy-NG
 
 **Robowoofy** is a GitHub-Actions-driven automation tool that lets you safely execute, simulate, and propose multi-step on-chain transactions through a Gnosis Safe.
 It’s designed so users can open PRs that define **one function** (e.g. `woofy()`) describing the on-chain actions they want the Safe to perform.
