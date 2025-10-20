@@ -11,11 +11,11 @@ class NetworkCfg(TypedDict):
 
 NETWORKS: Mapping[str, NetworkCfg] = {
     "eth": {
-        "safe": BrownieSafe("0x64d1B1F1d6b22CC8216F663b0De87FC75866DA2A"),
+        "safe": BrownieSafe("ychad.eth"),
         "safe_tx_queue_url": "https://app.safe.global/transactions/queue?safe=eth:",
     },
     "base": {
-        "safe": BrownieSafe("0x64d1B1F1d6b22CC8216F663b0De87FC75866DA2A"),
+        "safe": BrownieSafe("0xbfAABa9F56A39B814281D68d2Ad949e88D06b02E"),  # bChad
         "safe_tx_queue_url": "https://app.safe.global/transactions/queue?safe=base:",
     },
 }

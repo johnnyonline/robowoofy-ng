@@ -74,11 +74,11 @@ def sign(nonce: Optional[int] = None):
             msg = (
                 f"🐶🐶🐶\n"
                 f"<b>Title:</b> {pr_title}\n"
-                f"<b>Sender:</b> @{sender}\n"
-                f"<b>Description:</b> {pr_body}\n\n"
-                f'<a href="{code_link}">Review the code</a>, '
-                f'<a href="{logs_link}">verify the output</a>, and '
-                f'<a href="{safe_link}">sign here</a>.'
+                f"<b>Sender:</b> {sender}\n"
+                f"<b>Description:</b> {pr_body}\n"
+                f'<a href="{code_link}">Review</a> the code, '
+                f'<a href="{logs_link}">verify</a> the output, and '
+                f'<a href="{safe_link}">sign</a> here'
             )
 
             # Fire off async tg notif

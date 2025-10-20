@@ -1,58 +1,113 @@
-# robowoofy-ng
+# 🐶 robowoofy-ng
 
-## Installation
+**Robowoofy** is a GitHub-Actions-driven automation tool that lets you safely execute, simulate, and propose multi-step on-chain transactions through a Gnosis Safe.
+It’s designed so users can open PRs that define **one function** (e.g. `woofy()`) describing the on-chain actions they want the Safe to perform.
+A GitHub Action then picks up `/run` comments, runs the code in a Dockerized Brownie environment, and either does a **dry run** or **submits a transaction** to the Safe.
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/johnnyonline/robowoofy-ng.git
-   cd robowoofy-ng
-   ```
+## 🧠 How it Works
 
-2. **Set up virtual environment**
-   ```bash
-   uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
+- Every PR defines a function (e.g. `woofy()`) inside the `woof.py`, decorated with `@sign()`
+- The decorator constructs a Safe transaction and (optionally) signs and sends it
+- The GitHub Action listens for comments like `/run fn=woofy network=eth send=true`
 
-3. **Install dependencies**
-   ```bash
-   # Install all dependencies
-   uv sync
-   ```
+## 🧩 Writing your function
 
-   > Note: This project uses [uv](https://github.com/astral-sh/uv) for faster dependency installation. If you don't have uv installed, you can install it with `pip install uv` or follow the [installation instructions](https://github.com/astral-sh/uv#installation).
+A function could look like:
+```python
+from .config import SAFE
+from .sign import sign
+from .utils import load_contract
 
-4. **Environment setup**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API keys and configuration
+@sign(nonce=None)  # optional: specify nonce to override pending
+def woofy():
+    ycrv = load_contract("0xFCc5c47bE19d06BF83eB04298b026F81069ff65b")
+    ybs = load_contract("0xE9A115b77A1057C918F997c32663FdcE24FB873f")
 
-   # Load environment variables into your shell session
-   export $(grep -v '^#' .env | xargs)
-   ```
+    balance = ycrv.balanceOf(SAFE)
+    print(f"Our yCRV balance: {balance / 1e18:.4f}")
 
-## Usage
+    ycrv.approve(ybs.address, balance)
+    print("Approved YBS to pull yCRV")
 
-Run:
-```shell
-brownie run src/woof.py woofy --network eth
+    ybs.stake(balance)
+    print("Staked yCRV into YBS")
 ```
 
-## Code Style
+## 💼 Setting up the Repository
+
+If you want to use Robowoofy as to queue txns to your own Safe:
+
+1. **Use this repo as a template**
+   - Click **“Use this template”** on GitHub (top right of the repo)
+   - Create your own repository (e.g. `my-very-safe-safe`)
+
+2. **Configure Secrets and Variables**
+   - Go to:  
+     **Settings --> Secrets and variables --> Actions**
+   - Add the following (based on `.env.example`):
+     ```
+     ROBOWOOFY_SIGNER_PK=<private key of the bot or EOA signer>
+     ETHERSCAN_TOKEN=<your Etherscan API key>
+     TG_BOT_ACCESS_TOKEN=<Telegram bot token>
+     TG_GROUP_CHAT_ID=<Telegram group chat ID for notifications>
+     ETH_RPC_URL=<Ethereum RPC URL>
+     ```
+   - Make sure all variables match the `.env.example` format
+
+3. **Commit your function**
+   - Modify `src/woof.py` to include your transaction logic
+   - Push your branch and open a PR
+
+4. **Trigger a run**
+   - Comment on your PR with:
+     ```
+     /run fn=woofy network=eth send=false
+     ```
+   - Robowoofy will:
+     - React with 👀 and 🚀  
+     - Perform a dry run  
+     - Post results and logs as a comment  
+     - If `send=true` and run succeeds, it will queue the txn and label and close the PR automatically
+
+### ⚙️ Default values
+
+If any parameters are missing from the `/run` comment, the following defaults are applied:
+
+| Parameter | Default | Description |
+|------------|----------|-------------|
+| `fn` | `woofy` | Function name to execute |
+| `network` | `eth` | Network to use (must exist in `network-config.yaml`) |
+| `send` | `false` | If `false`, performs a dry run; if `true`, proposes a Safe txn |
+
+Commenting just `/run` is equivalent to `/run fn=woofy network=eth send=false`
+
+## 🐳 Docker Usage
+
+You can reproduce the same environment locally as CI:
+
+```bash
+# Build
+docker build -t robowoofy-ng .
+
+# Run
+docker run -it --rm --env-file .env -v $(pwd):/robowoofy-ng robowoofy-ng bash
+```
+
+Inside the container, run:
+```bash
+brownie run src/woof.py woofy --network eth-fork
+```
+
+## ✨ Code Style
 
 Format and lint code with ruff:
 ```bash
 # Format code
-uv run ruff format .
+ruff format .
 
 # Lint code
-uv run ruff check .
+ruff check .
 
 # Fix fixable lint issues
-uv run ruff check --fix .
-```
-
-Type checking with mypy:
-```bash
-mypy src
+ruff check --fix .
 ```

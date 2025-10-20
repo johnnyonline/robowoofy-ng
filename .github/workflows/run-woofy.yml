@@ -117,10 +117,10 @@ jobs:
           body: |
             ${{ 
               steps.run_woofy.outcome == 'success' && steps.parse.outputs.send == 'true'
-              && format('> ✅ TX with nonce {0} successfully sent. Find output logs below.\n> Find your queued TX on the Gnosis UI.\n\nYour PR has been labeled with tag **{1} #{0}**.', steps.post.outputs.nonce, steps.parse.outputs.network)
+              && format('> ✅ txn with nonce {0} successfully queued. Find output logs below. Your PR has been labeled with tag **{1} #{0}**', steps.post.outputs.nonce, steps.parse.outputs.network)
               || (steps.run_woofy.outcome == 'success' && steps.parse.outputs.send != 'true'
-                  && '> ✅ Dry run success. See full output below.\n> Rerun with `send=true` to publish the TX to the Safe.')
-              || '> ❌ Run failed. See logs below.'
+                  && '> ✅ Dry run success. See full output below. Rerun with `send=true` to queue the txn')
+              || '> ❌ Run failed. See logs below'
             }}
 
             **Output:**
