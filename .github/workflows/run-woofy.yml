@@ -79,6 +79,7 @@ jobs:
           echo "NETWORK=${{ steps.parse.outputs.network }}" >> .env
 
       - name: Run Robowoofy
+        id: run_woofy
         run: |
           echo "Running Robowoofy with parameters:"
           echo "Function: ${{ steps.parse.outputs.fn }}"
