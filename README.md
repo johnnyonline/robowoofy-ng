@@ -2,7 +2,7 @@
 
 **Robowoofy** is a GitHub-Actions-driven automation tool that lets you safely execute, simulate, and propose multi-step on-chain transactions through a Gnosis Safe.
 It’s designed so users can open PRs that define **one function** (e.g. `woofy()`) describing the on-chain actions they want the Safe to perform.
-A GitHub Action then picks up `/run` comments, runs the code in a Dockerized Brownie environment, and either does a **dry run** or **submits a transaction** to the Safe.
+A GitHub Action then picks up `/run` comments, runs the code in a Dockerized Brownie environment, and either does a **dry run** or **submits a transaction** to the Safe
 
 ## 🧠 How it Works
 
@@ -42,8 +42,7 @@ If you want to use Robowoofy as to queue txns to your own Safe:
    - Create your own repository (e.g. `my-very-safe-safe`)
 
 2. **Configure Secrets and Variables**
-   - Go to:  
-     **Settings --> Secrets and variables --> Actions**
+   - Go to **Settings --> Secrets and variables --> Actions**
    - Add the following (based on `.env.example`):
      ```
      ROBOWOOFY_SIGNER_PK=<private key of the bot or EOA signer>
@@ -53,6 +52,7 @@ If you want to use Robowoofy as to queue txns to your own Safe:
      ETH_RPC_URL=<Ethereum RPC URL>
      ```
    - Make sure all variables match the `.env.example` format
+   - In `src/config.py`, set your Safe address per network in the `NETWORKS` mapping
 
 3. **Commit your function**
    - Modify `src/woof.py` to include your transaction logic
