@@ -59,6 +59,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: 'refs/pull/${{ github.event.issue.number }}/head'
 
       - name: Build Docker image
         run: docker build -t robowoofy-ng .
@@ -81,6 +83,7 @@ jobs:
       - name: Run Robowoofy
         id: run_woofy
         run: |
+          set -o pipefail
           echo "Running Robowoofy with parameters:"
           echo "Function: ${{ steps.parse.outputs.fn }}"
           echo "Network: ${{ steps.parse.outputs.network }}"
@@ -96,17 +99,15 @@ jobs:
                 --network ${{ steps.parse.outputs.network }}-fork
             " | tee run_output.log
 
-      - name: Extract nonce + prepare log snippet
+      - name: Extract nonce + prepare clean log
         id: post
         if: always()
         run: |
-          # Extract first ROBOWOOFY_NONCE=NNN occurrence
           NONCE="$(grep -Eo 'ROBOWOOFY_NONCE=[0-9]+' run_output.log | head -n1 | cut -d= -f2 || true)"
           echo "nonce=${NONCE:-unknown}" >> $GITHUB_OUTPUT
 
-          # Prepare a readable tail of logs (last 200 lines)
           echo 'log<<EOF' >> $GITHUB_OUTPUT
-          tail -n 200 run_output.log >> $GITHUB_OUTPUT
+          cat run_output.log | sed -r "s/\x1B\[[0-9;]*[a-zA-Z]//g" >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Update comment with output
