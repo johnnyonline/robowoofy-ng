@@ -26,6 +26,14 @@ jobs:
         with:
           comment-id: ${{ github.event.comment.id }}
           reactions: rocket
+      
+      - name: Post start progress
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ github.event.comment.id }}
+          body: |
+            > 🚀 Agent **GitHub Actions ${{ github.run_id }}** has picked up this request.  
+            > Follow progress here: [Run Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
       - name: Parse command
         id: parse
@@ -100,33 +108,33 @@ jobs:
           tail -n 200 run_output.log >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
       
+      - name: Update comment with output
+        if: always()
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ github.event.comment.id }}
+          body: |
+            > ${{
+              steps.run_woofy.outcome == 'success'
+              && (steps.parse.outputs.send == 'true'
+                  && format('✅ TX with nonce {0} successfully sent. Find output logs below.\nFind your queued TX on the Gnosis UI.\n\nYour PR has been labeled with tag **{1} #{0}**.', steps.post.outputs.nonce, steps.parse.outputs.network)
+                  || '✅ Dry run success. See full output below.\nRerun with `send=true` to publish the TX to the Safe.')
+              || '❌ Run failed. See logs below.'
+            }}
+
+            **Output:**
+            ```
+            ${{ steps.post.outputs.log }}
+            ```
+      
       - name: React to comment with hooray
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ github.event.comment.id }}
           reactions: hooray
 
-      - name: Update comment with logs
-        if: always()
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          comment-id: ${{ github.event.comment.id }}
-          body: |
-            **Robowoofy Run**
-            • **Function:** `${{ steps.parse.outputs.fn }}`
-            • **Network:** `${{ steps.parse.outputs.network }}`
-            • **Send:** `${{ steps.parse.outputs.send }}`
-            • **Status:** `${{ steps.run_woofy.outcome }}`
-
-            <details>
-            <summary>View Logs (last 200 lines)</summary>
-
-            ```
-            ${{ steps.post.outputs.log }}
-            ```
-            </details>
-      
-      - name: Add network label
+      - name: Add network label (only if closing)
+        if: ${{ steps.run_woofy.outcome == 'success' && steps.parse.outputs.send == 'true' }}
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: "${{ steps.parse.outputs.network }} #${{ steps.post.outputs.nonce }}"
@@ -136,7 +144,6 @@ jobs:
         uses: peter-evans/close-issue@v3
         with:
           issue-number: ${{ github.event.issue.number }}
-          comment: "✅ Successful run on `${{ steps.parse.outputs.network }}` with send=true. Closing PR."
 
       - name: Cleanup .env
         if: always()
