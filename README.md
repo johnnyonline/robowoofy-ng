@@ -35,7 +35,7 @@ def woofy():
 
 ## Setting up the Repository
 
-If you want to use Robowoofy as to queue txns to your own Safe:
+If you want to use Robowoofy to queue txns to your own Safe:
 
 1. **Use this repo as a template**
    - Click **“Use this template”** on GitHub (top right of the repo)
@@ -45,7 +45,7 @@ If you want to use Robowoofy as to queue txns to your own Safe:
    - Go to **Settings --> Secrets and variables --> Actions**
    - Add the following (based on `.env.example`):
      ```
-     ROBOWOOFY_SIGNER_PK=<private key of the bot or EOA signer>
+     ROBOWOOFY_SIGNER_PK=<private key of the EOA proposer>
      ETHERSCAN_TOKEN=<your Etherscan API key>
      TG_BOT_ACCESS_TOKEN=<Telegram bot token>
      TG_GROUP_CHAT_ID=<Telegram group chat ID for notifications>
