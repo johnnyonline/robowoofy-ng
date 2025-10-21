@@ -14,7 +14,6 @@ def sign(nonce: Optional[int] = None):
     Decorator that automatically handles Safe setup, signing, (optionally) posting, and sending a telegram notification.
 
     Args:
-        send (bool): Whether to post the transaction to the Safe service. Defaults to False (dry-run).
         nonce (Optional[int]): Specific nonce to use for the Safe transaction. If None, uses the pending nonce.
     """
 
@@ -36,7 +35,7 @@ def sign(nonce: Optional[int] = None):
             print("\n🔍 Transaction preview:\n")
             SAFE.preview(safe_tx, call_trace=True)
 
-            # Determine send flag from env var if not explicitly set
+            # Determine send flag from env var. Default to false
             send = os.getenv("SEND", "false").lower() == "true"
 
             if not send:

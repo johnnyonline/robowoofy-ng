@@ -17,6 +17,18 @@ async def notify_group_chat(
     chat_id: int = TG_GROUP_CHAT_ID,
     disable_web_page_preview: bool = True,
 ) -> None:
+    """
+    Send a notification message to a Telegram group chat.
+
+    Args:
+        text (str): The message text to send.
+        parse_mode (str): The parse mode for the message (e.g., "HTML", "Markdown").
+        chat_id (int): The Telegram chat ID to send the message to.
+        disable_web_page_preview (bool): Whether to disable link previews in the message.
+
+    Returns:
+        None
+    """
     try:
         bot = Bot(token=TG_BOT_ACCESS_TOKEN)
         await bot.send_message(
