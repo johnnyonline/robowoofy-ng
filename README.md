@@ -78,8 +78,9 @@ If any parameters are missing from the `/run` comment, the following defaults ar
 | `fn` | `woofy` | Function name to execute |
 | `network` | `eth` | Network to use (must exist in `network-config.yaml`) |
 | `send` | `false` | If `false`, performs a dry run; if `true`, proposes a Safe txn |
+| `delete-branch-after-send` | `true` | If `true`, deletes the branch after successful send; if `false`, keeps it |
 
-Commenting just `/run` is equivalent to `/run fn=woofy network=eth send=false`
+Commenting just `/run` is equivalent to `/run fn=woofy network=eth send=false delete-branch-after-send=true`
 
 ## Docker Usage
 
