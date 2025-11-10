@@ -2,6 +2,7 @@ from .config import SAFE
 from .sign import sign
 from .utils import load_contract
 
+
 @sign()
 def woofy():
     # Instantiate contracts with `load_contract`

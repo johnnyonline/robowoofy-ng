@@ -33,6 +33,41 @@ def woofy():
     print("Staked yCRV into YBS")
 ```
 
+Or a 🐮 CoW Swap limit sell:
+```python
+from .config import SAFE
+from .sign import sign
+from .utils import load_contract
+from .helpers import cowswap_quote, cowswap_limit_sell, COWSWAP_RELAYER
+
+@sign()
+def swap_crvusd_for_wsteth():
+    token_in = load_contract("0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E")  # crvUSD
+    token_out = load_contract("0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0")  # wstETH
+
+    amount = token_in.balanceOf(SAFE)
+    print(f"Swapping {amount / (10 ** token_in.decimals())} {token_in.symbol()} for {token_out.symbol()}")
+
+    if token_in.allowance(SAFE, COWSWAP_RELAYER) < amount:
+        token_in.approve(COWSWAP_RELAYER, amount)
+
+    quote = cowswap_quote(
+        from_address=SAFE.address,
+        sell_token=token_in.address,
+        buy_token=token_out.address,
+        amount=amount,
+    )
+
+    cowswap_limit_sell(
+        safe=SAFE,
+        sell_token=token_in,
+        buy_token=token_out,
+        sell_amount=quote["sell_amount"],
+        buy_amount=int(quote["buy_amount"] * 0.995),  # 0.5% slippage
+    )
+    print("🐮 Moo...")
+```
+
 ## Setting up the Repository
 
 If you want to use Robowoofy to queue txns to your own Safe:
