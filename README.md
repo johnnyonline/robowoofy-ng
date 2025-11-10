@@ -33,7 +33,7 @@ def woofy():
     print("Staked yCRV into YBS")
 ```
 
-Or a 🐮 CoW Swap limit sell:
+Or a CoW Swap limit sell:
 ```python
 from .config import SAFE
 from .sign import sign
