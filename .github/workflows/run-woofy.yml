@@ -154,12 +154,15 @@ jobs:
         with:
           labels: "${{ steps.parse.outputs.network }} #${{ steps.post.outputs.nonce }}"
       
-      - name: Close PR and optionally delete branch if success & send=true
+      - name: Close PR if success & send=true
         if: ${{ steps.run_woofy.outcome == 'success' && steps.parse.outputs.send == 'true' }}
         uses: peter-evans/close-issue@v3
         with:
           issue-number: ${{ github.event.issue.number }}
-          delete-branch: ${{ steps.parse.outputs.delete_branch == 'true' }}
+
+      - name: Delete branch if success & send=true & delete_branch=true
+        if: ${{ steps.run_woofy.outcome == 'success' && steps.parse.outputs.send == 'true' && steps.parse.outputs.delete_branch == 'true' }}
+        run: gh api repos/${{ github.repository }}/git/refs/heads/${{ github.head_ref }} -X DELETE
 
       - name: Cleanup .env
         if: always()
