@@ -5,7 +5,7 @@ on:
     types: [created]
 
 permissions:
-  contents: read
+  contents: write
   issues: write
   pull-requests: write
 
@@ -154,6 +154,15 @@ jobs:
         with:
           labels: "${{ steps.parse.outputs.network }} #${{ steps.post.outputs.nonce }}"
       
+      - name: Get PR branch name
+        if: ${{ steps.run_woofy.outcome == 'success' && steps.parse.outputs.send == 'true' && steps.parse.outputs.delete_branch == 'true' }}
+        id: get_branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q .headRefName)
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
       - name: Close PR if success & send=true
         if: ${{ steps.run_woofy.outcome == 'success' && steps.parse.outputs.send == 'true' }}
         uses: peter-evans/close-issue@v3
@@ -162,7 +171,9 @@ jobs:
 
       - name: Delete branch if success & send=true & delete_branch=true
         if: ${{ steps.run_woofy.outcome == 'success' && steps.parse.outputs.send == 'true' && steps.parse.outputs.delete_branch == 'true' }}
-        run: gh api repos/${{ github.repository }}/git/refs/heads/${{ github.head_ref }} -X DELETE
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api repos/${{ github.repository }}/git/refs/heads/${{ steps.get_branch.outputs.branch }} -X DELETE
 
       - name: Cleanup .env
         if: always()
