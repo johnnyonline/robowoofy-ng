@@ -1,5 +1,7 @@
+import os
+
 import requests
-from brownie import chain
+from brownie import accounts, chain
 
 COWSWAP_RELAYER = "0xC92E8bdf79f0507f65a392b0ab4667716BFE0110"
 
@@ -57,3 +59,15 @@ def cowswap_limit_sell(
     print(f"Order: https://explorer.cow.fi/orders/{order_uid}")
 
     gnosis_settlement.setPreSignature(order_uid, True)
+
+
+def execute_pending_transactions():
+    from .config import SAFE
+
+    accounts.clear()
+    signer = accounts.add(os.environ["ROBOWOOFY_SIGNER_PK"])
+
+    for tx in SAFE.pending_transactions:
+        print(f"Executing transaction with nonce {tx.safe_nonce}...")
+        receipt = SAFE.execute_transaction(tx, signer)
+        print(f"🔗 Transaction id: {receipt.txid}")

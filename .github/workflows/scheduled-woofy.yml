@@ -1,0 +1,64 @@
+name: 🐶 Scheduled Robowoofy
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Run daily at 8:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  run-scheduled:
+    if: false  # Set to true to enable scheduled runs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and cache Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: robowoofy-ng:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create .env file
+        run: |
+          echo "ROBOWOOFY_SIGNER_PK=${{ secrets.ROBOWOOFY_SIGNER_PK }}" > .env
+          echo "ETHERSCAN_TOKEN=${{ secrets.ETHERSCAN_TOKEN }}" >> .env
+          echo "TG_BOT_ACCESS_TOKEN=${{ secrets.TG_BOT_ACCESS_TOKEN }}" >> .env
+          echo "TG_GROUP_CHAT_ID=${{ secrets.TG_GROUP_CHAT_ID }}" >> .env
+          echo "ETH_RPC_URL=${{ secrets.ETH_RPC_URL }}" >> .env
+          echo "NETWORK=eth" >> .env
+
+      - name: Run Robowoofy
+        run: |
+          docker run --rm \
+            --env-file .env \
+            -v ${{ github.workspace }}:/robowoofy-ng \
+            robowoofy-ng \
+            bash -c "
+              brownie networks import ./network-config.yaml && \
+              SEND=true brownie run src/woof.py woofy --network eth-fork
+            "
+
+      - name: Execute pending transactions
+        run: |
+          docker run --rm \
+            --env-file .env \
+            -v ${{ github.workspace }}:/robowoofy-ng \
+            robowoofy-ng \
+            bash -c "
+              brownie networks import ./network-config.yaml && \
+              brownie run src/helpers.py execute_pending_transactions --network eth
+            "
+
+      - name: Cleanup .env
+        if: always()
+        run: rm -f .env
