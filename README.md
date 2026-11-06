@@ -68,20 +68,20 @@ def swap_crvusd_for_wsteth():
     print("🐮 Moo...")
 ```
 
-Or a Flex trove (see `src/flex.py` for collateral, borrow/repay, rates, the leverage zapper and lending):
+Or a Flex Trove (see `src/flex.py` for collateral, borrow/repay, rates, the leverage zapper and lending):
 ```python
 from . import flex
 from .sign import sign
 
 @sign()
-def open_wsteth_trove():
-    tm = "0x5fF405CC51705D609F7F2CCc2Bb36a66675938fC"  # wstETH/WETH
+def open_yvusd_trove():
+    tm = "0x8ee72c388aA73096338EE18CD46a39D98b8983c9"  # yvUSD/USDC
 
     flex.open_trove(
         tm,
-        collateral_amount=100 * 10**18,
-        debt_amount=50 * 10**18,
-        annual_interest_rate=3 * 10**16,  # 3%
+        collateral_amount=10_000 * 10**6,  # yvUSD
+        debt_amount=5_000 * 10**6,  # USDC
+        annual_interest_rate=5 * 10**4,  # 5%, in USDC precision
     )
 ```
 

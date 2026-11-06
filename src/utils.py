@@ -110,6 +110,20 @@ ABI = [
         "inputs": [{"name": "owner", "type": "address"}],
         "outputs": [{"name": "", "type": "uint256"}],
     },
+    {
+        "name": "decimals",
+        "type": "function",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "uint8"}],
+    },
+    {
+        "name": "symbol",
+        "type": "function",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "string"}],
+    },
 ]
 
 
