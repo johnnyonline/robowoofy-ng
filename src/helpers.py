@@ -4,6 +4,7 @@ import requests
 from brownie import accounts, chain
 
 COWSWAP_RELAYER = "0xC92E8bdf79f0507f65a392b0ab4667716BFE0110"
+ENSO_ROUTE_URL = "https://api.enso.build/api/v1/shortcuts/route"
 
 
 def cowswap_quote(from_address: str, sell_token: str, buy_token: str, amount: int, is_sell: bool = True):
@@ -71,3 +72,29 @@ def execute_pending_transactions():
         print(f"Executing transaction with nonce {tx.safe_nonce}...")
         receipt = SAFE.execute_transaction(tx, signer)
         print(f"🔗 Transaction id: {receipt.txid}")
+
+
+def enso_route(token_in: str, token_out: str, amount_in: int, from_address: str, slippage_bps: int = 100):
+    data = {
+        "chainId": chain.id,
+        "fromAddress": from_address,
+        "routingStrategy": "router",
+        "tokenIn": [token_in],
+        "tokenOut": [token_out],
+        "amountIn": [str(amount_in)],
+        "slippage": str(slippage_bps),
+    }
+    headers = {"Authorization": f"Bearer {os.environ['ENSO_API_KEY']}"}
+
+    response = requests.post(ENSO_ROUTE_URL, json=data, headers=headers, timeout=30)
+    response.raise_for_status()
+
+    resp = response.json()
+    amount_out = resp["amountOut"]
+    amount_out = int(amount_out[0] if isinstance(amount_out, list) else amount_out)
+    return {
+        "router": resp["tx"]["to"],
+        "data": resp["tx"]["data"],
+        "amount_out": amount_out,
+        "min_amount_out": amount_out * (10_000 - slippage_bps) // 10_000,
+    }

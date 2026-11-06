@@ -68,6 +68,23 @@ def swap_crvusd_for_wsteth():
     print("🐮 Moo...")
 ```
 
+Or a Flex trove (see `src/flex.py` for collateral, borrow/repay, rates, the leverage zapper and lending):
+```python
+from . import flex
+from .sign import sign
+
+@sign()
+def open_wsteth_trove():
+    tm = "0x5fF405CC51705D609F7F2CCc2Bb36a66675938fC"  # wstETH/WETH
+
+    flex.open_trove(
+        tm,
+        collateral_amount=100 * 10**18,
+        debt_amount=50 * 10**18,
+        annual_interest_rate=3 * 10**16,  # 3%
+    )
+```
+
 ## Setting up the Repository
 
 If you want to use Robowoofy to queue txns to your own Safe:
@@ -85,6 +102,7 @@ If you want to use Robowoofy to queue txns to your own Safe:
      TG_BOT_ACCESS_TOKEN=<Telegram bot token>
      TG_GROUP_CHAT_ID=<Telegram group chat ID for notifications>
      ETH_RPC_URL=<Ethereum RPC URL>
+     ENSO_API_KEY=<Enso API key, for the Flex leverage zapper helpers>
      ```
    - Make sure all variables match the `.env.example` format
    - In `src/config.py`, set your Safe address per network in the `NETWORKS` mapping

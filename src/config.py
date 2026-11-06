@@ -65,3 +65,6 @@ def get_safe_tx_queue_url(network: str | None = None) -> str:
 # Initialize SAFE at import time
 network = os.getenv("NETWORK", "eth")
 SAFE = get_safe(network)
+
+# Gas estimates of heavy txns on a fork can exceed safe-eth's default 15s RPC timeout
+SAFE.ethereum_client.w3.provider._request_kwargs["timeout"] = 300
