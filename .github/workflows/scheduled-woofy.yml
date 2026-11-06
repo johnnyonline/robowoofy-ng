@@ -35,6 +35,7 @@ jobs:
           echo "TG_BOT_ACCESS_TOKEN=${{ secrets.TG_BOT_ACCESS_TOKEN }}" >> .env
           echo "TG_GROUP_CHAT_ID=${{ secrets.TG_GROUP_CHAT_ID }}" >> .env
           echo "ETH_RPC_URL=${{ secrets.ETH_RPC_URL }}" >> .env
+          echo "ENSO_API_KEY=${{ secrets.ENSO_API_KEY }}" >> .env
           echo "NETWORK=eth" >> .env
 
       - name: Run Robowoofy

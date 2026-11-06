@@ -86,6 +86,7 @@ jobs:
           echo "TG_BOT_ACCESS_TOKEN=${{ secrets.TG_BOT_ACCESS_TOKEN }}" >> .env
           echo "TG_GROUP_CHAT_ID=${{ secrets.TG_GROUP_CHAT_ID }}" >> .env
           echo "ETH_RPC_URL=${{ secrets.ETH_RPC_URL }}" >> .env
+          echo "ENSO_API_KEY=${{ secrets.ENSO_API_KEY }}" >> .env
           echo "GITHUB_REPOSITORY=${{ github.repository }}" >> .env
           echo "GITHUB_RUN_ID=${{ github.run_id }}" >> .env
           echo "GITHUB_PR_NUMBER=${{ github.event.issue.number }}" >> .env
