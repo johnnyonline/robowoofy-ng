@@ -7,7 +7,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN curl -L https://foundry.paradigm.xyz | bash && \
-    /root/.foundry/bin/foundryup && \
+    /root/.foundry/bin/foundryup --install v1.5.1 && \
     ln -s /root/.foundry/bin/* /usr/local/bin/
 
 # docker build -t robowoofy-ng . --no-cache

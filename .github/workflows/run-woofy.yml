@@ -11,7 +11,9 @@ permissions:
 
 jobs:
   run-woofy:
-    if: startsWith(github.event.comment.body, '/run')
+    if: >-
+      startsWith(github.event.comment.body, '/run')
+      && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: ubuntu-latest
 
     steps:
@@ -75,7 +77,7 @@ jobs:
           load: true
           tags: robowoofy-ng:latest
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true
 
       - name: Create .env file
         run: |
